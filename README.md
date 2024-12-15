@@ -24,6 +24,32 @@ This project provides a RESTful API to fetch and analyze climate data and renewa
 | GET    | `/energy/renewable-energy/{country_code}` | Fetch renewable energy consumption for a country.       |
 | GET    | `/energy/renewable-energy/year/{year}`  | Fetch energy data for a specific year.                   |
 | GET    | `/energy/renewable-energy/{country_code}/{year}` | Fetch energy data for a country and year.          |
+| GET    | `/energy/graph/renewable-energy/{country_code}` | Generate and display a graph for renewable energy trends.    |
+| GET    | `/energy/graph/save/renewable-energy/{country_code}` | Save the graph to `static/graphs` and download it.          |
+
+### Graph Generation
+
+1. **Display Graphs:**
+   - Access the endpoint to generate and display a graph directly in the browser:
+     - Example: `http://127.0.0.1:8000/energy/graph/renewable-energy/JPN`
+
+2. **Save Graphs:**
+   - To save a graph locally, access the following endpoint:
+     - Example: `http://127.0.0.1:8000/energy/graph/save/renewable-energy/JPN`
+   - The graph will be saved in the `static/graphs/` directory. For example:
+     - `static/graphs/JPN_renewable_energy.png`
+
+3. **Folder Structure:**
+   - Ensure that the `static/graphs/` directory exists and has the necessary permissions.
+
+### Example Graphs
+
+#### Renewable Energy Consumption in Japan
+![Japan Renewable Energy](static/graphs/JPN_renewable_energy.png)
+
+#### Renewable Energy Consumption in USA
+![USA Renewable Energy](static/graphs/USA_renewable_energy.png)
+
 
 ## Getting Started
 
@@ -73,6 +99,8 @@ global_environment_api/
 │   │   └── energy.py         # API endpoints for energy data
 │   ├── utils/
 │       └── data_client.py    # Helper functions for BigQuery
+├── static/                   
+│   └── graphs/ 
 ├── tests/
 │   └── test_energy.py        # Pytest test cases
 ├── data/                     # Placeholder for any sample data
