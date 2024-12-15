@@ -39,8 +39,8 @@ This project provides a RESTful API to fetch and analyze climate data and renewa
 
 1. Clone the repository:
 ```bash
-   git clone https://github.com/your-username/global_environment_api.git
-   cd global_environment_api
+git clone https://github.com/JourneySculptor/global_environment_api.git
+cd global_environment_api
 ```
 2. Install dependencies:
 ```bash
@@ -52,12 +52,16 @@ This project provides a RESTful API to fetch and analyze climate data and renewa
 ```
 4. Run the server:
 ```bash
-   vicorn app.api_server:app --reload
+   uvicorn app.api_server:app --reload
 ```
 5. Test the endpoints:
 - Example: Fetch climate data:
 ```bash
    curl -X GET "http://127.0.0.1:8000/energy/climate-data"
+```
+- Example: Fetch renewable energy data for Japan:
+```bash
+   curl -X GET "http://127.0.0.1:8000/energy/renewable-energy/JPN"
 ```
 
 ## Project Structure
@@ -71,14 +75,12 @@ global_environment_api/
 │       └── data_client.py    # Helper functions for BigQuery
 ├── tests/
 │   └── test_energy.py        # Pytest test cases
-├── data/                     # Placeholder for data files
-├── Dockerfile                # Dockerfile for containerization
+├── data/                     # Placeholder for any sample data
+├── Dockerfile                # Configuration for Docker containerization
 ├── requirements.txt          # Python dependencies
 ├── .env                      # Environment variables (not committed)
 └── README.md                 # Project documentation
 ```
-
----
 
 ## Future Enhancements
 1. **Data Visualization:**
