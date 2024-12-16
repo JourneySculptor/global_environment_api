@@ -79,15 +79,19 @@ async def get_renewable_energy(country_code: str):
 @router.get("/renewable-energy/year/{year}")
 async def get_energy_by_year(year: int):
     """
-    Fetch renewable energy data for a specific year.
+    Retrieve renewable energy consumption data for a specific year.
+    :param year: The target year to fetch energy data for (e.g., 2022).
+    :return: JSON response containing energy consumption data by country for the specified year.
     """
     try:
+        # BigQuery SQL query to fetch renewable energy data for the given year
         query = f"""
             SELECT *
             FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
             WHERE Year = {year}
             ORDER BY `Country Code` ASC
         """
+        # Execute the query and retrieve results
         query_job = client.query(query)
         results = [
             {
@@ -97,9 +101,14 @@ async def get_energy_by_year(year: int):
             }
             for row in query_job.result()
         ]
+
+        # Return the data as JSON response
         return {"status": "success", "data": results}
+
     except Exception as e:
+        # Handle any errors that occur during query execution
         raise HTTPException(status_code=500, detail=f"Error fetching data for year {year}: {str(e)}")
+
 
 
 @router.get("/renewable-energy/{country_code}/{year}")
