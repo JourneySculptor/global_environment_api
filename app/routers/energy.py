@@ -5,15 +5,31 @@ from io import BytesIO
 from fastapi.responses import Response, FileResponse
 from fastapi import APIRouter, HTTPException
 from google.cloud import bigquery
+import matplotlib
+from pydantic import BaseModel
+from typing import List
+
+# Define a Pydantic model for climate data response
+class ClimateDataItem(BaseModel):
+    year: int
+    temp: float
+    country: str
+
+class ClimateDataResponse(BaseModel):
+    status: str
+    data: List[dict]
 
 # Initialize FastAPI router
 router = APIRouter()
 
-# Configure logging
-logging.basicConfig(level=logging.DEBUG)
+# Non-GUI backend for Matplotlib
+matplotlib.use("Agg") 
+
+# Logging Configuration
+logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Graph storage directory configuration
+# Directory for saving graphs
 GRAPH_FOLDER = "static/graphs"
 if not os.path.exists(GRAPH_FOLDER):
     os.makedirs(GRAPH_FOLDER)
@@ -21,215 +37,174 @@ if not os.path.exists(GRAPH_FOLDER):
 # Initialize BigQuery client
 client = bigquery.Client()
 
+# Add this function to improve error handling
+def handle_exception(e: Exception, detail: str = "An error occurred"):
+    """Log the error and return an HTTPException."""
+    logger.error(f"{detail}: {e}")
+    raise HTTPException(status_code=500, detail=detail)
+
+# Modify this existing function in energy.py
+def fetch_data_from_bigquery(query: str):
+    """Fetch data from BigQuery with robust error handling."""
+    try:
+        query_job = client.query(query)
+        return query_job.result()
+    except Exception as e:
+        handle_exception(e, "Error fetching data from BigQuery")
+
+def save_chart_and_return_path(buf, filename: str):
+    """Save chart buffer to file and return the file path."""
+    file_path = os.path.join(GRAPH_FOLDER, filename)
+    with open(file_path, "wb") as f:
+        f.write(buf.getvalue())
+    logger.info(f"Chart saved at: {file_path}")
+    return file_path
+
+def generate_pie_chart(labels, values, title: str):
+    """Generate a pie chart."""
+    plt.figure(figsize=(10, 6))
+    plt.pie(values, labels=labels, autopct='%1.1f%%', startangle=140)
+    plt.title(title)
+    buf = BytesIO()
+    plt.savefig(buf, format="png")
+    plt.close()
+    buf.seek(0)
+    return buf
+
+def generate_bar_chart(x_values, y_values, title: str, x_label: str, y_label: str):
+    """Generate a bar chart."""
+    plt.figure(figsize=(12, 7))
+    plt.bar(x_values, y_values, color='skyblue')
+    plt.title(title)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.xticks(rotation=45)
+    buf = BytesIO()
+    plt.savefig(buf, format="png")
+    plt.close()
+    buf.seek(0)
+    return buf
+
+def generate_line_chart(x_values, y_values, title: str, x_label: str, y_label: str):
+    """Generate a line chart."""
+    plt.figure(figsize=(12, 7))
+    plt.plot(x_values, y_values, marker='o', linestyle='-', color='b')
+    plt.title(title)
+    plt.xlabel(x_label)
+    plt.ylabel(y_label)
+    plt.xticks(rotation=45)
+    buf = BytesIO()
+    plt.savefig(buf, format="png")
+    plt.close()
+    buf.seek(0)
+    return buf
+
 # ------------------------------
-# Existing Endpoints for Data Fetching
+# Endpoints with Save Functionality
 # ------------------------------
 
-@router.get("/climate-data")
+@router.get(
+    "/energy/climate-data",
+    response_model=ClimateDataResponse,
+    responses={404: {"description": "Data not found"}}
+)
 async def get_climate_data():
+    query = """
+        SELECT year, average_temperature, country
+        FROM `global-environment-project.climate_data.global_temperature`
+        ORDER BY year DESC
     """
-    Fetch and return climate data from BigQuery.
-    """
-    try:
-        query = """
-            SELECT year, average_temperature, country
-            FROM `global-environment-project.climate_data.global_temperature`
-            ORDER BY year DESC
-        """
-        query_job = client.query(query)
-        results = [
-            {
-                "year": row.year,
-                "average_temperature": row.average_temperature,
-                "country": row.country
-            }
-            for row in query_job.result()
-        ]
-        return {"status": "success", "data": results}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching climate data: {str(e)}")
+    results = fetch_data_from_bigquery(query)
+    if not results.total_rows:
+        logger.warning("No data found for the climate data query.")
+        return {"status": "success", "data": []}  # Return empty data instead of raising an error
+    data = [{"year": row.year, "temp": row.average_temperature, "country": row.country} for row in results]
+    return {"status": "success", "data": data}
 
 
-@router.get("/renewable-energy/{country_code}")
+
+@router.get("/energy/renewable-energy/{country_code}")
 async def get_renewable_energy(country_code: str):
+    """Fetch renewable energy data by country."""
+    query = f"""
+        SELECT Year, `Country Name`, Renewable_Energy_Consumption
+        FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
+        WHERE `Country Code` = '{country_code}'
+        ORDER BY Year DESC
     """
-    Fetch renewable energy data for a specific country.
+    results = fetch_data_from_bigquery(query)
+    
+    # Return an empty response if no data is found
+    if not results.total_rows:
+        logger.warning("No data found for the renewable energy query.")
+        return {"status": "success", "data": []}
+
+    data = [{"Year": row.Year, "Country": row["Country Name"], "Consumption": row.Renewable_Energy_Consumption} for row in results]
+    return {"status": "success", "data": data}
+
+
+@router.get("/energy/graph/pie/renewable-energy/{year}")
+async def get_pie_chart_renewable_energy(year: int):
+    """Generate and return a pie chart for renewable energy consumption."""
+    query = f"""
+        SELECT `Country Name`, Renewable_Energy_Consumption
+        FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
+        WHERE Year = {year}
+        ORDER BY Renewable_Energy_Consumption DESC
+        LIMIT 10
     """
-    try:
-        query = f"""
-            SELECT *
-            FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
-            WHERE `Country Code` = '{country_code}'
-            ORDER BY Year DESC
-        """
-        query_job = client.query(query)
-        results = [
-            {
-                "Year": row.Year,
-                "Country": row["Country Name"],
-                "Renewable Energy Consumption": row.Renewable_Energy_Consumption,
-            }
-            for row in query_job.result()
-        ]
-        return {"status": "success", "data": results}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching data for {country_code}: {str(e)}")
+    results = fetch_data_from_bigquery(query)
+    
+    # Return an empty response if no data is found
+    if not results.total_rows:
+        logger.warning("No data found for the renewable energy pie chart query.")
+        return {"status": "success", "data": []}
+
+    countries, consumption = zip(*[(row["Country Name"], row.Renewable_Energy_Consumption) for row in results])
+    buf = generate_pie_chart(countries, consumption, f"Top 10 Renewable Energy Consumers in {year}")
+    file_path = save_chart_and_return_path(buf, f"top_10_renewable_{year}.png")
+    return FileResponse(file_path, media_type="image/png")
 
 
-@router.get("/renewable-energy/year/{year}")
-async def get_energy_by_year(year: int):
+@router.get("/energy/graph/bar/renewable-energy/{country_code}")
+async def get_bar_chart_renewable_energy(country_code: str):
+    """Generate and return a bar chart for renewable energy consumption."""
+    query = f"""
+        SELECT Year, Renewable_Energy_Consumption
+        FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
+        WHERE `Country Code` = '{country_code}'
+        ORDER BY Year ASC
     """
-    Retrieve renewable energy consumption data for a specific year.
-    :param year: The target year to fetch energy data for (e.g., 2022).
-    :return: JSON response containing energy consumption data by country for the specified year.
+    results = fetch_data_from_bigquery(query)
+    
+    # Return an empty response if no data is found
+    if not results.total_rows:
+        logger.warning("No data found for the renewable energy bar chart query.")
+        return {"status": "success", "data": []}
+
+    years, consumption = zip(*[(row.Year, row.Renewable_Energy_Consumption) for row in results])
+    buf = generate_bar_chart(years, consumption, f"Renewable Energy Consumption in {country_code}", "Year", "Consumption (%)")
+    file_path = save_chart_and_return_path(buf, f"{country_code}_bar_chart.png")
+    return FileResponse(file_path, media_type="image/png")
+
+
+@router.get("/energy/graph/line/renewable-energy/{country_code}")
+async def get_line_chart_renewable_energy(country_code: str):
+    """Generate and return a line chart for renewable energy consumption."""
+    query = f"""
+        SELECT Year, Renewable_Energy_Consumption
+        FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
+        WHERE `Country Code` = '{country_code}'
+        ORDER BY Year ASC
     """
-    try:
-        # BigQuery SQL query to fetch renewable energy data for the given year
-        query = f"""
-            SELECT *
-            FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
-            WHERE Year = {year}
-            ORDER BY `Country Code` ASC
-        """
-        # Execute the query and retrieve results
-        query_job = client.query(query)
-        results = [
-            {
-                "Year": row.Year,
-                "Country": row["Country Name"],
-                "Renewable Energy Consumption": row.Renewable_Energy_Consumption,
-            }
-            for row in query_job.result()
-        ]
+    results = fetch_data_from_bigquery(query)
+    
+    # Return an empty response if no data is found
+    if not results.total_rows:
+        logger.warning("No data found for the renewable energy line chart query.")
+        return {"status": "success", "data": []}
 
-        # Return the data as JSON response
-        return {"status": "success", "data": results}
-
-    except Exception as e:
-        # Handle any errors that occur during query execution
-        raise HTTPException(status_code=500, detail=f"Error fetching data for year {year}: {str(e)}")
-
-
-
-@router.get("/renewable-energy/{country_code}/{year}")
-async def get_energy_by_country_and_year(country_code: str, year: int):
-    """
-    Fetch renewable energy data for a specific country and year.
-    """
-    try:
-        query = f"""
-            SELECT *
-            FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
-            WHERE `Country Code` = '{country_code}' AND Year = {year}
-        """
-        query_job = client.query(query)
-        results = [
-            {
-                "Year": row.Year,
-                "Country": row["Country Name"],
-                "Renewable Energy Consumption": row.Renewable_Energy_Consumption,
-            }
-            for row in query_job.result()
-        ]
-        return {"status": "success", "data": results}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error fetching data for {country_code} in {year}: {str(e)}")
-
-# ------------------------------
-# New Endpoints for Graph Generation
-# ------------------------------
-
-@router.get("/graph/renewable-energy/{country_code}")
-async def get_renewable_energy_graph(country_code: str):
-    """
-    Generate a graph for renewable energy consumption, return it as an image, and save it locally.
-    """
-    try:
-        logger.debug(f"Fetching renewable energy data for country code: {country_code}")
-
-        # BigQuery SQL query
-        query = f"""
-            SELECT Year, Renewable_Energy_Consumption
-            FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
-            WHERE `Country Code` = '{country_code}'
-            ORDER BY Year ASC
-        """
-        query_job = client.query(query)
-        results = query_job.result()
-
-        # Extract data for plotting
-        years = []
-        consumption = []
-        for row in results:
-            years.append(row["Year"])
-            consumption.append(row["Renewable_Energy_Consumption"])
-
-        if not years or not consumption:
-            logger.warning(f"No data found for country code: {country_code}")
-            raise HTTPException(status_code=404, detail="No data found for the specified country")
-
-        # Generate the graph
-        plt.figure(figsize=(10, 6))
-        plt.plot(years, consumption, marker='o', linestyle='-', color='b')
-        plt.title(f"Renewable Energy Consumption in {country_code}")
-        plt.xlabel("Year")
-        plt.ylabel("Renewable Energy Consumption (%)")
-        plt.grid(True)
-
-        # Save the graph to the specified folder
-        graph_filename = f"{country_code}_renewable_energy.png"
-        graph_path = os.path.join(GRAPH_FOLDER, graph_filename)
-        plt.savefig(graph_path)
-        plt.close()
-
-        logger.info(f"Graph saved at: {graph_path}")
-
-        # Return the graph as an HTTP response
-        return FileResponse(graph_path, media_type="image/png")
-
-    except Exception as e:
-        logger.error(f"Error generating graph for {country_code}: {e}")
-        raise HTTPException(status_code=500, detail=f"Error generating graph for {country_code}: {str(e)}")
-
-
-@router.get("/graph/save/renewable-energy/{country_code}")
-async def save_renewable_energy_graph(country_code: str):
-    """
-    Generate and save a graph for renewable energy consumption to a file.
-    """
-    try:
-        # Query renewable energy data
-        query = f"""
-            SELECT Year, Renewable_Energy_Consumption
-            FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
-            WHERE `Country Code` = '{country_code}'
-            ORDER BY Year ASC
-        """
-        query_job = client.query(query)
-        results = query_job.result()
-
-        # Extract data
-        years = []
-        consumption = []
-        for row in results:
-            years.append(row["Year"])
-            consumption.append(row["Renewable_Energy_Consumption"])
-
-        if not years or not consumption:
-            raise HTTPException(status_code=404, detail="No data found for the specified country")
-
-        # Generate and save graph
-        graph_path = os.path.join(GRAPH_FOLDER, f"{country_code}_renewable_energy.png")
-        plt.figure(figsize=(10, 6))
-        plt.plot(years, consumption, marker='o', linestyle='-', color='b')
-        plt.title(f"Renewable Energy Consumption in {country_code}")
-        plt.xlabel("Year")
-        plt.ylabel("Renewable Energy Consumption (%)")
-        plt.grid(True)
-        plt.savefig(graph_path)
-        plt.close()
-
-        return FileResponse(graph_path, media_type="image/png")
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error saving graph for {country_code}: {str(e)}")
+    years, consumption = zip(*[(row.Year, row.Renewable_Energy_Consumption) for row in results])
+    buf = generate_line_chart(years, consumption, f"Renewable Energy Consumption Over Time in {country_code}", "Year", "Consumption (%)")
+    file_path = save_chart_and_return_path(buf, f"{country_code}_line_chart.png")
+    return FileResponse(file_path, media_type="image/png")

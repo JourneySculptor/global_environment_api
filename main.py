@@ -4,7 +4,7 @@ from app.routers import energy
 
 app = FastAPI()
 
-app.include_router(energy.router)
+app.include_router(energy.router, prefix="/energy", tags=["Energy"])
 
 @app.get("/")
 def health_check():

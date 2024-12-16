@@ -14,12 +14,13 @@ sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")
 
 app = FastAPI()
 
+# Register energy router
+app.include_router(energy.router, tags=["energy"]) 
+
 @app.get("/")
 def read_root():
     return {"status": "API is running"}
 
-# Include routers
-app.include_router(energy.router, prefix="/energy")
 
 if __name__ == "__main__":
     import uvicorn
