@@ -1,34 +1,48 @@
+# Name of the CI pipeline
 name: Python CI
 
+# Trigger conditions for the pipeline
 on:
+  # Trigger on any push to the main branch
   push:
     branches:
       - main
+  # Trigger when a pull request is opened or updated for the main branch
   pull_request:
     branches:
       - main
 
+# Define the jobs in this CI pipeline
 jobs:
   test:
+    # Use the latest Ubuntu environment for this job
     runs-on: ubuntu-latest
+
+    # Steps to perform in this job
     steps:
-      # Step 1: Check out the code
+      # Step 1: Check out the repository code
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up Python
+      # Step 2: Set up the Python environment
       - name: Set up Python
         uses: actions/setup-python@v3
         with:
+          # Specify the version of Python to use
           python-version: "3.12"
 
-      # Step 3: Install dependencies
+      # Step 3: Install all necessary dependencies
       - name: Install dependencies
         run: |
+          # Upgrade pip to the latest version
           python -m pip install --upgrade pip
-          pip install httpx pytest fastapi starlette uvicorn pydantic google-cloud-bigquery
-          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Install dependencies specified in requirements.txt
+          pip install -r requirements.txt
+          # Ensure additional required libraries are installed
+          pip install pytest httpx google-cloud-bigquery matplotlib
 
-      # Step 4: Run tests
+      # Step 4: Run tests using pytest
       - name: Run tests
-        run: pytest tests/
+        run: |
+          # Run all tests located in the 'tests/' directory
+          pytest tests/
