@@ -3,14 +3,12 @@ name: Python CI
 
 # Trigger conditions for the pipeline
 on:
-  # Trigger on any push to the main branch
   push:
     branches:
-      - main
-  # Trigger when a pull request is opened or updated for the main branch
+      - main  # Trigger on push
   pull_request:
     branches:
-      - main
+      - main  # Trigger on pull request
 
 # Define the jobs in this CI pipeline
 jobs:
@@ -31,17 +29,23 @@ jobs:
           # Specify the version of Python to use
           python-version: "3.12"
 
-      # Step 3: Install all necessary dependencies
+      # Step 3: Install dependencies
       - name: Install dependencies
         run: |
           # Upgrade pip to the latest version
           python -m pip install --upgrade pip
-          # Install dependencies specified in requirements.txt
-          pip install -r requirements.txt
-          # Ensure additional required libraries are installed
-          pip install pytest httpx google-cloud-bigquery matplotlib
+          # Install dependencies from requirements.txt
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          # Ensure pytest and other required libraries are installed
+          pip install pytest httpx matplotlib google-cloud-bigquery
 
-      # Step 4: Run tests using pytest
+      # Step 4: Verify pytest installation
+      - name: Verify pytest installation
+        run: |
+          # Confirm pytest is installed and available
+          pytest --version
+
+      # Step 5: Run tests using pytest
       - name: Run tests
         run: |
           # Run all tests located in the 'tests/' directory
