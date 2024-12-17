@@ -3,7 +3,7 @@ import logging
 import matplotlib.pyplot as plt
 from io import BytesIO
 from fastapi.responses import Response, FileResponse
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Query
 from google.cloud import bigquery
 import matplotlib
 from pydantic import BaseModel
@@ -108,20 +108,37 @@ def generate_line_chart(x_values, y_values, title: str, x_label: str, y_label: s
     response_model=ClimateDataResponse,
     responses={404: {"description": "Data not found"}}
 )
-async def get_climate_data():
+async def get_climate_data(
+    year: int = Query(None, description="Year to filter data"), 
+    country: str = Query(None, description="Country code to filter data")
+):
+    """Fetch global climate data with optional filters for year and country."""
+    # Start with a base query
     query = """
         SELECT year, average_temperature, country
         FROM `global-environment-project.climate_data.global_temperature`
-        ORDER BY year DESC
+        WHERE TRUE
     """
+
+    # Add filters dynamically, ensuring proper formatting
+    if year:
+        query += f" AND year = {year}"
+    if country:
+        query += f" AND country = '{country}'"
+
+    query += " ORDER BY year DESC"
+
+    logger.info(f"Executing query: {query}") 
+
+    # Fetch data
     results = fetch_data_from_bigquery(query)
     if not results.total_rows:
         logger.warning("No data found for the climate data query.")
-        return {"status": "success", "data": []}  # Return empty data instead of raising an error
+        return {"status": "success", "data": [], "message": "No data found for the given filters."}
+
+    # Format and return data
     data = [{"year": row.year, "temp": row.average_temperature, "country": row.country} for row in results]
     return {"status": "success", "data": data}
-
-
 
 @router.get("/energy/renewable-energy/{country_code}")
 async def get_renewable_energy(country_code: str):
@@ -136,8 +153,8 @@ async def get_renewable_energy(country_code: str):
     
     # Return an empty response if no data is found
     if not results.total_rows:
-        logger.warning("No data found for the renewable energy query.")
-        return {"status": "success", "data": []}
+        logger.warning("No data found for the climate data query.")
+        return {"status": "success", "data": [], "message": "No data found for the given filters."}
 
     data = [{"Year": row.Year, "Country": row["Country Name"], "Consumption": row.Renewable_Energy_Consumption} for row in results]
     return {"status": "success", "data": data}
@@ -157,8 +174,8 @@ async def get_pie_chart_renewable_energy(year: int):
     
     # Return an empty response if no data is found
     if not results.total_rows:
-        logger.warning("No data found for the renewable energy pie chart query.")
-        return {"status": "success", "data": []}
+        logger.warning("No data found for the query.")
+        return {"status": "success", "data": [], "message": "No data found for the given filters."}
 
     countries, consumption = zip(*[(row["Country Name"], row.Renewable_Energy_Consumption) for row in results])
     buf = generate_pie_chart(countries, consumption, f"Top 10 Renewable Energy Consumers in {year}")
@@ -179,8 +196,8 @@ async def get_bar_chart_renewable_energy(country_code: str):
     
     # Return an empty response if no data is found
     if not results.total_rows:
-        logger.warning("No data found for the renewable energy bar chart query.")
-        return {"status": "success", "data": []}
+        logger.warning("No data found for the climate data query.")
+        return {"status": "success", "data": [], "message": "No data found for the given filters."}
 
     years, consumption = zip(*[(row.Year, row.Renewable_Energy_Consumption) for row in results])
     buf = generate_bar_chart(years, consumption, f"Renewable Energy Consumption in {country_code}", "Year", "Consumption (%)")
@@ -201,8 +218,8 @@ async def get_line_chart_renewable_energy(country_code: str):
     
     # Return an empty response if no data is found
     if not results.total_rows:
-        logger.warning("No data found for the renewable energy line chart query.")
-        return {"status": "success", "data": []}
+        logger.warning("No data found for the climate data query.")
+        return {"status": "success", "data": [], "message": "No data found for the given filters."}
 
     years, consumption = zip(*[(row.Year, row.Renewable_Energy_Consumption) for row in results])
     buf = generate_line_chart(years, consumption, f"Renewable Energy Consumption Over Time in {country_code}", "Year", "Consumption (%)")
