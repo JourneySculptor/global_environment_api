@@ -1,122 +1,157 @@
 # Global Environment API
 
-This project provides a RESTful API to fetch and analyze climate data and renewable energy consumption data. It is designed for environmental research and decision-making support.
+This project provides a robust and scalable RESTful API for analyzing **climate data** and **renewable energy consumption trends**. Designed for environmental researchers, data analysts, and decision-makers, it enables querying, filtering, and visualization of global data with ease.
 
-## Features
+---
 
-1. **Climate Data**:
-   - Retrieve average global temperatures by year and country.
+## **Features**
 
-2. **Renewable Energy Data**:
-   - Fetch renewable energy consumption by country.
-   - Query energy consumption for a specific year.
-   - Combine queries for country and year.
+1. **Climate Data Filtering**:
+   - Retrieve global temperature data by **year** and **country**.
+   - Example: `/energy/climate-data?year=2020&country=USA`
 
-3. **Efficient Data Handling**:
-   - Powered by Google BigQuery for large-scale data storage and fast queries.
+2. **Renewable Energy Trends**:
+   - Fetch renewable energy consumption data for any country and year.
+   - Visualize energy trends with **bar charts, line graphs, and pie charts**.
 
-## API Endpoints
+3. **Graph Generation & Saving**:
+   - Generate interactive graphs for energy data.
+   - Save graphs locally for reports or presentations.
 
-| Method | Endpoint                                | Description                                              |
-|--------|-----------------------------------------|----------------------------------------------------------|
-| GET    | `/`                                     | Health check for the API.                                |
-| GET    | `/energy/climate-data`                  | Fetch climate data (average temperatures).               |
-| GET    | `/energy/renewable-energy/{country_code}` | Fetch renewable energy consumption for a country.       |
-| GET    | `/energy/renewable-energy/year/{year}`  | Fetch energy data for a specific year.                   |
-| GET    | `/energy/renewable-energy/{country_code}/{year}` | Fetch energy data for a country and year.          |
-| GET    | `/energy/graph/renewable-energy/{country_code}` | Generate and display a graph for renewable energy trends.    |
-| GET    | `/energy/graph/save/renewable-energy/{country_code}` | Save the graph to `static/graphs` and download it.          |
+4. **High Performance**:
+   - Built on **FastAPI** and powered by **Google BigQuery** for fast data querying.
 
-### Graph Generation
+---
 
-1. **Display Graphs:**
-   - Access the endpoint to generate and display a graph directly in the browser:
-     - Example: `http://127.0.0.1:8000/energy/graph/renewable-energy/JPN`
+## **API Endpoints**
 
-2. **Save Graphs:**
-   - To save a graph locally, access the following endpoint:
-     - Example: `http://127.0.0.1:8000/energy/graph/save/renewable-energy/JPN`
-   - The graph will be saved in the `static/graphs/` directory. For example:
-     - `static/graphs/JPN_renewable_energy.png`
+### **Climate Data**
+| Method | Endpoint                   | Description                                      |
+|--------|----------------------------|--------------------------------------------------|
+| GET    | `/energy/climate-data`     | Fetch climate data (average temperature).        |
+| GET    | `/energy/climate-data?year=2020` | Filter data by year.                          |
+| GET    | `/energy/climate-data?country=USA` | Filter data by country.                     |
+| GET    | `/energy/climate-data?year=2020&country=USA` | Combine filters for year and country. |
 
-3. **Folder Structure:**
-   - Ensure that the `static/graphs/` directory exists and has the necessary permissions.
+#### Example Response:
+```json
+{
+  "status": "success",
+  "data": [
+    {"year": 2020, "temp": 14.8, "country": "Global"},
+    {"year": 2020, "temp": 15.2, "country": "Sweden"}
+  ]
+}
+```
 
-### Example Graphs
+---
 
-#### Renewable Energy Consumption in Japan
-![Japan Renewable Energy](static/graphs/JPN_renewable_energy.png)
+### **Renewable Energy Data**
+| Method | Endpoint                                      | Description                                     |
+|--------|----------------------------------------------|-------------------------------------------------|
+| GET    | `/energy/renewable-energy/{country_code}`    | Fetch renewable energy consumption by country.  |
+| GET    | `/energy/graph/pie/renewable-energy/{year}`  | Generate a pie chart for top energy consumers. |
+| GET    | `/energy/graph/bar/renewable-energy/{country_code}` | Generate a bar chart for energy trends. |
+| GET    | `/energy/graph/line/renewable-energy/{country_code}` | Generate a line chart for energy trends. |
 
-#### Renewable Energy Consumption in USA
-![USA Renewable Energy](static/graphs/USA_renewable_energy.png)
+---
 
+## **Graph Generation**
 
-## Getting Started
+### **1. Display Graphs**
+Generate graphs directly in the browser.
 
-### Prerequisites
+- **Example**:  
+  - Bar Chart: `http://127.0.0.1:8000/energy/graph/bar/renewable-energy/JPN`  
+  - Line Chart: `http://127.0.0.1:8000/energy/graph/line/renewable-energy/JPN`  
+  - Pie Chart: `http://127.0.0.1:8000/energy/graph/pie/renewable-energy/2010`
 
-- Python 3.10 or later
-- Google Cloud SDK installed
-- Access to a Google Cloud Project with BigQuery enabled
-- Environment variables:
-  - `GOOGLE_APPLICATION_CREDENTIALS`: Path to the service account key JSON file.
+### **2. Save Graphs Locally**
+Save generated graphs as PNG files to the `static/graphs/` folder.
 
-### Installation
+- **Example**:  
+  - `static/graphs/JPN_bar_chart.png`  
+  - `static/graphs/top_10_renewable_2010.png`
+
+---
+
+## **Example Graphs**
+
+### **Bar Chart: Renewable Energy in Japan**
+![Japan Renewable Energy Bar Chart](static/graphs/JPN_bar_chart.png)
+
+### **Line Chart: Renewable Energy in Japan**
+![Japan Renewable Energy Line Chart](static/graphs/JPN_line_chart.png)
+
+### **Pie Chart: Top 10 Renewable Energy Consumers (2010)**
+![Top Renewable Energy Consumers Pie Chart](static/graphs/top_10_renewable_2010.png)
+
+---
+
+## **Getting Started**
+
+### **Prerequisites**
+- Python 3.10+
+- Google Cloud SDK with BigQuery enabled.
+- Set the `GOOGLE_APPLICATION_CREDENTIALS` environment variable.
+
+### **Installation Steps**
 
 1. Clone the repository:
-```bash
-git clone https://github.com/JourneySculptor/global_environment_api.git
-cd global_environment_api
-```
-2. Install dependencies:
-```bash
-   pip install -r requirements.txt
-```
-3. Set up environment variables:
-```bash
-   export GOOGLE_APPLICATION_CREDENTIALS="path/to/your/keyfile.json"
-```
-4. Run the server:
-```bash
-   uvicorn app.api_server:app --reload
-```
-5. Test the endpoints:
-- Example: Fetch climate data:
-```bash
-   curl -X GET "http://127.0.0.1:8000/energy/climate-data"
-```
-- Example: Fetch renewable energy data for Japan:
-```bash
-   curl -X GET "http://127.0.0.1:8000/energy/renewable-energy/JPN"
-```
+   ```bash
+   git clone https://github.com/JourneySculptor/global_environment_api.git
+   cd global_environment_api
+   ```
 
-## Project Structure
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+3. Set your Google service account key:
+   ```bash
+   export GOOGLE_APPLICATION_CREDENTIALS="path/to/keyfile.json"
+   ```
+
+4. Run the server locally:
+   ```bash
+   uvicorn app.api_server:app --reload
+   ```
+
+5. Test the API:
+   ```bash
+   curl -X GET "http://127.0.0.1:8000/energy/climate-data"
+   ```
+
+---
+
+## **Folder Structure**
+
 ```plaintext
 global_environment_api/
 ├── app/
 │   ├── api_server.py         # FastAPI application
 │   ├── routers/
-│   │   └── energy.py         # API endpoints for energy data
+│   │   └── energy.py         # API endpoints
 │   ├── utils/
-│       └── data_client.py    # Helper functions for BigQuery
+│       └── data_client.py    # BigQuery client helper
 ├── static/                   
-│   └── graphs/ 
-├── tests/
-│   └── test_energy.py        # Pytest test cases
-├── data/                     # Placeholder for any sample data
-├── Dockerfile                # Configuration for Docker containerization
-├── requirements.txt          # Python dependencies
-├── .env                      # Environment variables (not committed)
+│   └── graphs/               # Saved graph images
+├── tests/                    
+│   └── test_energy.py        # Unit tests
+├── requirements.txt          # Dependencies
+├── Dockerfile                # Docker setup
 └── README.md                 # Project documentation
 ```
 
-## Future Enhancements
-1. **Data Visualization:**
-- Add endpoints to serve graphs for energy consumption trends.
-2. **Deployment:**
-- Deploy the API to Google Cloud for public access.
-3. **Authentication:**
-- Add API key-based authentication for enhanced security.
+---
 
-## License
+## **Future Enhancements**
+- **Authentication**: API key-based authentication for security.
+- **Data Analysis**: Advanced energy trend predictions using machine learning.
+- **Deployment**: Deploy to Google Cloud Run or AWS Lambda for scalability.
+
+---
+
+## **License**
 This project is licensed under the MIT License.
