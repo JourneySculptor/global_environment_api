@@ -12,8 +12,7 @@ This project provides a robust and scalable RESTful API for analyzing **climate 
 
 2. **Renewable Energy Trends**:
    - Fetch renewable energy consumption data for any country and year.
-   - Visualize energy trends with **bar charts, line graphs, and pie charts**.
-   - **Pie charts now show the Top 5 renewable energy consumers for a selected year**.
+   - Visualize energy trends with **bar charts, line graphs**.
 
 3. **Graph Generation & Saving**:
    - Generate interactive graphs for energy data.
@@ -51,7 +50,6 @@ This project provides a robust and scalable RESTful API for analyzing **climate 
 | Method | Endpoint                                      | Description                                      |
 |--------|----------------------------------------------|--------------------------------------------------|
 | GET    | `/energy/renewable-energy/{country_code}`    | Fetch renewable energy consumption by country.   |
-| GET    | `/energy/graph/pie/renewable-energy/{year}`  | Generate a pie chart for **Top 5 energy consumers**. |
 | GET    | `/energy/graph/bar/renewable-energy/{country_code}` | Generate a bar chart for energy trends.  |
 | GET    | `/energy/graph/line/renewable-energy/{country_code}` | Generate a line chart for energy trends.  |
 
@@ -66,14 +64,13 @@ Generate graphs directly in the browser.
 - **Example**:  
   - Bar Chart: `http://127.0.0.1:8000/energy/graph/bar/renewable-energy/JPN`  
   - Line Chart: `http://127.0.0.1:8000/energy/graph/line/renewable-energy/JPN`  
-  - Pie Chart: `http://127.0.0.1:8000/energy/graph/pie/renewable-energy/2010`
 
 ### **2. Save Graphs Locally**
 Save generated graphs as PNG files to the `static/graphs/` folder.
 
 - **Example**:  
   - `static/graphs/JPN_bar_chart.png`  
-  - `static/graphs/top_5_renewable_2010.png`
+  - `static/graphs/JPN_line_chart.png`
 
 
 ---
@@ -85,9 +82,6 @@ Save generated graphs as PNG files to the `static/graphs/` folder.
 
 ### **Line Chart: Renewable Energy in Japan**
 ![Japan Renewable Energy Line Chart](static/graphs/JPN_line_chart.png)
-
-### **Pie Chart: Top 5 Renewable Energy Consumers (2010)**
-![Top Renewable Energy Consumers Pie Chart](static/graphs/top_5_renewable_2010.png)
 
 
 ---
