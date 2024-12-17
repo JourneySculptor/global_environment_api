@@ -37,11 +37,29 @@ if not os.path.exists(GRAPH_FOLDER):
 # Initialize BigQuery client
 client = bigquery.Client()
 
+
+def build_query(base_query: str, filters: dict) -> str:
+    """Dynamically build a query with optional filters."""
+    query = base_query
+    for key, value in filters.items():
+        if value is not None:
+            query += f" AND {key} = '{value}'" if isinstance(value, str) else f" AND {key} = {value}"
+    query += " ORDER BY Year DESC"
+    return query
+
+
+def save_and_return_chart(buf: BytesIO, filename: str):
+    """Save the chart and return it as a FileResponse."""
+    file_path = save_chart_and_return_path(buf, filename)
+    return FileResponse(file_path, media_type="image/png")
+
+
 # Add this function to improve error handling
 def handle_exception(e: Exception, detail: str = "An error occurred"):
     """Log the error and return an HTTPException."""
     logger.error(f"{detail}: {e}")
     raise HTTPException(status_code=500, detail=detail)
+
 
 # Modify this existing function in energy.py
 def fetch_data_from_bigquery(query: str):
@@ -52,6 +70,15 @@ def fetch_data_from_bigquery(query: str):
     except Exception as e:
         handle_exception(e, "Error fetching data from BigQuery")
 
+
+def check_no_data(results, logger_message: str):
+    """Check if results are empty and log a warning."""
+    if not results.total_rows:
+        logger.warning(logger_message)
+        return {"status": "success", "data": [], "message": "No data found for the given filters."}
+    return None
+
+
 def save_chart_and_return_path(buf, filename: str):
     """Save chart buffer to file and return the file path."""
     file_path = os.path.join(GRAPH_FOLDER, filename)
@@ -59,6 +86,7 @@ def save_chart_and_return_path(buf, filename: str):
         f.write(buf.getvalue())
     logger.info(f"Chart saved at: {file_path}")
     return file_path
+
 
 def generate_pie_chart(labels, values, title: str):
     """Generate a pie chart."""
@@ -70,6 +98,7 @@ def generate_pie_chart(labels, values, title: str):
     plt.close()
     buf.seek(0)
     return buf
+
 
 def generate_bar_chart(x_values, y_values, title: str, x_label: str, y_label: str):
     """Generate a bar chart."""
@@ -85,6 +114,7 @@ def generate_bar_chart(x_values, y_values, title: str, x_label: str, y_label: st
     buf.seek(0)
     return buf
 
+
 def generate_line_chart(x_values, y_values, title: str, x_label: str, y_label: str):
     """Generate a line chart."""
     plt.figure(figsize=(12, 7))
@@ -99,9 +129,15 @@ def generate_line_chart(x_values, y_values, title: str, x_label: str, y_label: s
     buf.seek(0)
     return buf
 
+
 # ------------------------------
 # Endpoints with Save Functionality
 # ------------------------------
+
+class ClimateDataResponse(BaseModel):
+    status: str
+    data: List[dict]
+
 
 @router.get(
     "/energy/climate-data",
@@ -113,32 +149,21 @@ async def get_climate_data(
     country: str = Query(None, description="Country code to filter data")
 ):
     """Fetch global climate data with optional filters for year and country."""
-    # Start with a base query
-    query = """
+    base_query = """
         SELECT year, average_temperature, country
         FROM `global-environment-project.climate_data.global_temperature`
         WHERE TRUE
     """
-
-    # Add filters dynamically, ensuring proper formatting
-    if year:
-        query += f" AND year = {year}"
-    if country:
-        query += f" AND country = '{country}'"
-
-    query += " ORDER BY year DESC"
-
-    logger.info(f"Executing query: {query}") 
-
-    # Fetch data
+    query = build_query(base_query, {"year": year, "country": country})
     results = fetch_data_from_bigquery(query)
-    if not results.total_rows:
-        logger.warning("No data found for the climate data query.")
-        return {"status": "success", "data": [], "message": "No data found for the given filters."}
 
-    # Format and return data
+    no_data_response = check_no_data(results, "No data found for the climate data query.")
+    if no_data_response:
+        return no_data_response
+
     data = [{"year": row.year, "temp": row.average_temperature, "country": row.country} for row in results]
     return {"status": "success", "data": data}
+
 
 @router.get("/energy/renewable-energy/{country_code}")
 async def get_renewable_energy(country_code: str):
@@ -151,77 +176,86 @@ async def get_renewable_energy(country_code: str):
     """
     results = fetch_data_from_bigquery(query)
     
-    # Return an empty response if no data is found
-    if not results.total_rows:
-        logger.warning("No data found for the climate data query.")
-        return {"status": "success", "data": [], "message": "No data found for the given filters."}
 
+    # Return an empty response if no data is found
+    no_data_response = check_no_data(results, "No data found for the climate data query.")
+    if no_data_response:
+        return no_data_response
+    
     data = [{"Year": row.Year, "Country": row["Country Name"], "Consumption": row.Renewable_Energy_Consumption} for row in results]
     return {"status": "success", "data": data}
 
 
 @router.get("/energy/graph/pie/renewable-energy/{year}")
 async def get_pie_chart_renewable_energy(year: int):
-    """Generate and return a pie chart for renewable energy consumption."""
-    query = f"""
+    """Generate and return a pie chart for the top 5 renewable energy consumers in a given year."""
+    # Base SQL query for renewable energy consumption
+    base_query = """
         SELECT `Country Name`, Renewable_Energy_Consumption
         FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
-        WHERE Year = {year}
-        ORDER BY Renewable_Energy_Consumption DESC
-        LIMIT 10
+        WHERE TRUE
     """
-    results = fetch_data_from_bigquery(query)
+    # Dynamically add the Year filter and limit to top 5 results
+    query = build_query(base_query, {"Year": year}) + " LIMIT 5"
     
-    # Return an empty response if no data is found
-    if not results.total_rows:
-        logger.warning("No data found for the query.")
-        return {"status": "success", "data": [], "message": "No data found for the given filters."}
+    # Fetch results from BigQuery
+    results = fetch_data_from_bigquery(query)
 
-    countries, consumption = zip(*[(row["Country Name"], row.Renewable_Energy_Consumption) for row in results])
-    buf = generate_pie_chart(countries, consumption, f"Top 10 Renewable Energy Consumers in {year}")
-    file_path = save_chart_and_return_path(buf, f"top_10_renewable_{year}.png")
-    return FileResponse(file_path, media_type="image/png")
+    # Check if no data is available and handle gracefully
+    no_data_response = check_no_data(results, "No data found for the query.")
+    if no_data_response:
+        return no_data_response
+
+    # Extract countries and their respective consumption values
+    countries, consumption = zip(*[
+        (row["Country Name"], row.Renewable_Energy_Consumption) 
+        for row in results
+    ])
+
+    # Generate the pie chart
+    buf = generate_pie_chart(countries, consumption, f"Top 5 Renewable Energy Consumers in {year}")
+
+    # Save the chart and return as a file response
+    return save_and_return_chart(buf, f"top_5_renewable_{year}.png")
+
+
 
 
 @router.get("/energy/graph/bar/renewable-energy/{country_code}")
 async def get_bar_chart_renewable_energy(country_code: str):
     """Generate and return a bar chart for renewable energy consumption."""
-    query = f"""
+    base_query = """
         SELECT Year, Renewable_Energy_Consumption
         FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
-        WHERE `Country Code` = '{country_code}'
-        ORDER BY Year ASC
+        WHERE TRUE
     """
+    query = build_query(base_query, {"`Country Code`": country_code})  
     results = fetch_data_from_bigquery(query)
-    
-    # Return an empty response if no data is found
-    if not results.total_rows:
-        logger.warning("No data found for the climate data query.")
-        return {"status": "success", "data": [], "message": "No data found for the given filters."}
+
+    no_data_response = check_no_data(results, "No data found for the climate data query.")
+    if no_data_response:
+        return no_data_response
 
     years, consumption = zip(*[(row.Year, row.Renewable_Energy_Consumption) for row in results])
     buf = generate_bar_chart(years, consumption, f"Renewable Energy Consumption in {country_code}", "Year", "Consumption (%)")
-    file_path = save_chart_and_return_path(buf, f"{country_code}_bar_chart.png")
-    return FileResponse(file_path, media_type="image/png")
+    return save_and_return_chart(buf, f"{country_code}_bar_chart.png")  
 
 
 @router.get("/energy/graph/line/renewable-energy/{country_code}")
 async def get_line_chart_renewable_energy(country_code: str):
     """Generate and return a line chart for renewable energy consumption."""
-    query = f"""
+    base_query = """
         SELECT Year, Renewable_Energy_Consumption
         FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
-        WHERE `Country Code` = '{country_code}'
-        ORDER BY Year ASC
+        WHERE TRUE
     """
+    query = build_query(base_query, {"`Country Code`": country_code})  
     results = fetch_data_from_bigquery(query)
-    
-    # Return an empty response if no data is found
-    if not results.total_rows:
-        logger.warning("No data found for the climate data query.")
-        return {"status": "success", "data": [], "message": "No data found for the given filters."}
+
+    no_data_response = check_no_data(results, "No data found for the climate data query.")
+    if no_data_response:
+        return no_data_response
 
     years, consumption = zip(*[(row.Year, row.Renewable_Energy_Consumption) for row in results])
     buf = generate_line_chart(years, consumption, f"Renewable Energy Consumption Over Time in {country_code}", "Year", "Consumption (%)")
-    file_path = save_chart_and_return_path(buf, f"{country_code}_line_chart.png")
-    return FileResponse(file_path, media_type="image/png")
+    return save_and_return_chart(buf, f"{country_code}_line_chart.png")  
