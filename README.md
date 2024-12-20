@@ -18,8 +18,9 @@ This project provides a robust and scalable RESTful API for analyzing **climate 
    - Generate interactive graphs for energy data, including **forecast trends**.
    - Save graphs locally for reports or presentations.
 
-4. **High Performance**:
-   - Built on **FastAPI** and powered by **Google BigQuery** for fast data querying.
+4. **Detailed Report Generation**:
+   - Export renewable energy forecast data as **CSV**, **Excel**, or **PDF** for further analysis or presentation.
+   - Example: `/energy/export/forecast?country=USA&years=5&format=csv`
 
 5. **Renewable Energy Forecasting**:
    - Predict future renewable energy consumption trends based on historical data.
@@ -37,13 +38,14 @@ This project provides a robust and scalable RESTful API for analyzing **climate 
 | GET    | `/energy/climate-data?country=USA` | Filter data by country.                     |
 | GET    | `/energy/climate-data?year=2020&country=USA` | Combine filters for year and country. |
 | GET    | `/energy/forecast/renewable-energy` | Predict future renewable energy consumption. |
+| GET    | `/energy/export/forecast`                    | Export forecasted renewable energy data.        |
 
-#### Example Query:
+#### Example Query 1:
 ```bash
 curl -X GET "http://127.0.0.1:8000/energy/forecast/renewable-energy?country=USA&years=5"
 ```
 
-#### Example Response:
+#### Example Response 1:
 ```json
 {
   "status": "success",
@@ -55,6 +57,23 @@ curl -X GET "http://127.0.0.1:8000/energy/forecast/renewable-energy?country=USA&
     {"year": 2026, "predicted_consumption": 11.46}
   ],
   "graph_url": "/static/graphs/USA_forecast_chart.png"
+}
+```
+
+#### Example Query 2:
+```bash
+curl -X GET "http://127.0.0.1:8000/energy/export/forecast?country=USA&years=5&format=csv"
+```
+#### Supported Formats:
+- CSV
+- Excel
+- PDF
+
+#### Example Response 2:
+```json
+{
+  "status": "success",
+  "file_url": "/static/exports/USA_forecast.csv"
 }
 ```
 
@@ -100,6 +119,14 @@ Save generated graphs as PNG files to the `static/graphs/` folder.
 ### **Forecast Chart: Renewable Energy in USA**
 ![USA Renewable Energy Forecast Chart](static/graphs/USA_forecast_chart.png)
 
+### **Forecast Report: Renewable Energy in USA (CSV)**
+![Forecast CSV](static/exports/USA_forecast_example.png)
+
+### **Forecast Report: Renewable Energy in USA (Excel)**
+![Forecast Excel](static/exports/USA_forecast_excel_example.png)
+
+### **Forecast Report: Renewable Energy in USA (PDF)**
+![Forecast PDF](static/exports/USA_forecast_pdf_example.png)
 
 ---
 
