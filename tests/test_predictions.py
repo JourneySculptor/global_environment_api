@@ -43,3 +43,33 @@ def test_forecast_valid():
     assert data["status"] == "success"
     assert len(data["data"]) == 5  # 5 years forecast
     assert "graph_url" in data  # Graph URL should exist
+
+
+def test_export_forecast_csv():
+    """
+    Test exporting forecast data as a CSV file.
+    """
+    response = client.get("/energy/export/forecast?country=JPN&years=5&format=csv")
+    assert response.status_code == 200  # Check response status
+    assert "text/csv" in response.headers["content-type"]  # Partial match for charset
+    assert "attachment; filename=\"JPN_forecast.csv\"" in response.headers["content-disposition"]
+
+
+def test_export_forecast_excel():
+    """
+    Test exporting forecast data as an Excel file.
+    """
+    response = client.get("/energy/export/forecast?country=JPN&years=5&format=excel")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    assert "attachment; filename=\"JPN_forecast.xlsx\"" in response.headers["content-disposition"]
+
+
+def test_export_forecast_pdf():
+    """
+    Test exporting forecast data as a PDF file.
+    """
+    response = client.get("/energy/export/forecast?country=JPN&years=5&format=pdf")
+    assert response.status_code == 200
+    assert response.headers["content-type"] == "application/pdf"
+    assert "attachment; filename=\"JPN_forecast.pdf\"" in response.headers["content-disposition"]
