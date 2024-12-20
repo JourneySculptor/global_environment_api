@@ -26,6 +26,11 @@ This project provides a robust and scalable RESTful API for analyzing **climate 
    - Predict future renewable energy consumption trends based on historical data.
    - Generate detailed forecast charts with confidence intervals.
    - Example: `/energy/forecast/renewable-energy?country=USA&years=5`
+
+6. **Debugging Support**:
+   - A new tool, `search_keywords.py`, helps developers locate specific terms in the codebase.
+   - Example: Quickly identify files that reference specific functions or variables.
+
 ---
 
 ## **API Endpoints**
@@ -82,6 +87,10 @@ curl -X GET "http://127.0.0.1:8000/energy/export/forecast?country=USA&years=5&fo
 ## **Test Coverage**
 
 This project has comprehensive unit tests to ensure reliability and accuracy. Current test coverage:
+
+**Newly added tests**:
+- Export functionality for CSV, Excel, and PDF.
+- Validations for renewable energy forecast parameters.
 
 ```plaintext
 ---------- coverage: platform win32, python 3.12.4-final-0 -----------
@@ -186,6 +195,12 @@ Save generated graphs as PNG files to the `static/graphs/` folder.
    curl -X GET "http://127.0.0.1:8000/energy/climate-data"
    ```
 
+6. Use the Debugging Tool: If you need to locate specific terms or references in the codebase, you can use the debugging tool:
+   ```bash
+   python search_keywords.py
+   ```
+This tool helps identify files where specific keywords or functions are referenced.
+
 ---
 
 ## **Folder Structure**
@@ -201,13 +216,15 @@ global_environment_api/
 │       ├── chart_utils.py    # Functions for graph generation
 │       ├── prediction_utils.py # Functions for forecast calculations
 │       ├── export_utils.py   # Functions for exporting forecast data
-│       └── data_client.py    # BigQuery client helper
-├── static/                   
+│       ├── data_client.py    # BigQuery client helper
+│       └── report_utils.py   # Functions for generating reports
+├── static/
 │   ├── graphs/               # Saved graph images
-│   └── exports/              # Exported forecast data (e.g., CSV/Excel)
-├── tests/                    
+│   └── exports/              # Exported forecast data (e.g., CSV/Excel/PDF)
+├── tests/
 │   ├── test_energy.py        # Unit tests for energy endpoints
 │   ├── test_predictions.py   # Unit tests for prediction endpoints
+├── search_keywords.py        # Script for searching keywords in the project
 ├── requirements.txt          # Dependencies
 ├── Dockerfile                # Docker setup
 ├── .env                      # Environment variables
