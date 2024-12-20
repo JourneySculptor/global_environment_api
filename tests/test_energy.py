@@ -26,13 +26,7 @@ def test_renewable_energy_by_country():
     data = response.json()
     assert data["status"] == "success"
     assert len(data["data"]) > 0
-
-# Test for /energy/graph/pie/renewable-energy/{year}
-def test_renewable_energy_pie_chart():
-    """Test /energy/graph/pie/renewable-energy/{year} endpoint."""
-    response = client.get("/energy/graph/pie/renewable-energy/2022")
-    assert response.status_code == 200
-    assert response.headers["content-type"] == "image/png"
+    
 
 # Test for /energy/graph/bar/renewable-energy/{country_code}
 def test_renewable_energy_bar_chart():

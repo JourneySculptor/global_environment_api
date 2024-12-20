@@ -88,18 +88,6 @@ def save_chart_and_return_path(buf, filename: str):
     return file_path
 
 
-def generate_pie_chart(labels, values, title: str):
-    """Generate a pie chart."""
-    plt.figure(figsize=(10, 6))
-    plt.pie(values, labels=labels, autopct='%1.1f%%', startangle=140)
-    plt.title(title)
-    buf = BytesIO()
-    plt.savefig(buf, format="png")
-    plt.close()
-    buf.seek(0)
-    return buf
-
-
 def generate_bar_chart(x_values, y_values, title: str, x_label: str, y_label: str):
     """Generate a bar chart."""
     plt.figure(figsize=(12, 7))
@@ -184,41 +172,6 @@ async def get_renewable_energy(country_code: str):
     
     data = [{"Year": row.Year, "Country": row["Country Name"], "Consumption": row.Renewable_Energy_Consumption} for row in results]
     return {"status": "success", "data": data}
-
-
-@router.get("/energy/graph/pie/renewable-energy/{year}")
-async def get_pie_chart_renewable_energy(year: int):
-    """Generate and return a pie chart for the top 5 renewable energy consumers in a given year."""
-    # Base SQL query for renewable energy consumption
-    base_query = """
-        SELECT `Country Name`, Renewable_Energy_Consumption
-        FROM `global-environment-project.renewable_energy_data.renewable_energy_consumption`
-        WHERE TRUE
-    """
-    # Dynamically add the Year filter and limit to top 5 results
-    query = build_query(base_query, {"Year": year}) + " LIMIT 5"
-    
-    # Fetch results from BigQuery
-    results = fetch_data_from_bigquery(query)
-
-    # Check if no data is available and handle gracefully
-    no_data_response = check_no_data(results, "No data found for the query.")
-    if no_data_response:
-        return no_data_response
-
-    # Extract countries and their respective consumption values
-    countries, consumption = zip(*[
-        (row["Country Name"], row.Renewable_Energy_Consumption) 
-        for row in results
-    ])
-
-    # Generate the pie chart
-    buf = generate_pie_chart(countries, consumption, f"Top 5 Renewable Energy Consumers in {year}")
-
-    # Save the chart and return as a file response
-    return save_and_return_chart(buf, f"top_5_renewable_{year}.png")
-
-
 
 
 @router.get("/energy/graph/bar/renewable-energy/{country_code}")

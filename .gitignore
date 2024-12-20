@@ -30,3 +30,9 @@ htmlcov/
 .coverage
 .cache
 coverage.xml
+
+*.png
+*.csv
+*.xlsx
+static/graphs/
+static/exports/
