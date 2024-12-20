@@ -15,12 +15,16 @@ This project provides a robust and scalable RESTful API for analyzing **climate 
    - Visualize energy trends with **bar charts, line graphs**.
 
 3. **Graph Generation & Saving**:
-   - Generate interactive graphs for energy data.
+   - Generate interactive graphs for energy data, including **forecast trends**.
    - Save graphs locally for reports or presentations.
 
 4. **High Performance**:
    - Built on **FastAPI** and powered by **Google BigQuery** for fast data querying.
 
+5. **Renewable Energy Forecasting**:
+   - Predict future renewable energy consumption trends based on historical data.
+   - Generate detailed forecast charts with confidence intervals.
+   - Example: `/energy/forecast/renewable-energy?country=USA&years=5`
 ---
 
 ## **API Endpoints**
@@ -32,15 +36,25 @@ This project provides a robust and scalable RESTful API for analyzing **climate 
 | GET    | `/energy/climate-data?year=2020` | Filter data by year.                          |
 | GET    | `/energy/climate-data?country=USA` | Filter data by country.                     |
 | GET    | `/energy/climate-data?year=2020&country=USA` | Combine filters for year and country. |
+| GET    | `/energy/forecast/renewable-energy` | Predict future renewable energy consumption. |
+
+#### Example Query:
+```bash
+curl -X GET "http://127.0.0.1:8000/energy/forecast/renewable-energy?country=USA&years=5"
+```
 
 #### Example Response:
 ```json
 {
   "status": "success",
   "data": [
-    {"year": 2020, "temp": 14.8, "country": "Global"},
-    {"year": 2020, "temp": 15.2, "country": "Sweden"}
-  ]
+    {"year": 2022, "predicted_consumption": 10.54},
+    {"year": 2023, "predicted_consumption": 10.77},
+    {"year": 2024, "predicted_consumption": 11.0},
+    {"year": 2025, "predicted_consumption": 11.23},
+    {"year": 2026, "predicted_consumption": 11.46}
+  ],
+  "graph_url": "/static/graphs/USA_forecast_chart.png"
 }
 ```
 
@@ -82,6 +96,9 @@ Save generated graphs as PNG files to the `static/graphs/` folder.
 
 ### **Line Chart: Renewable Energy in Japan**
 ![Japan Renewable Energy Line Chart](static/graphs/JPN_line_chart.png)
+
+### **Forecast Chart: Renewable Energy in USA**
+![USA Renewable Energy Forecast Chart](static/graphs/USA_forecast_chart.png)
 
 
 ---
@@ -145,9 +162,9 @@ global_environment_api/
 ---
 
 ## **Future Enhancements**
-- **Authentication**: API key-based authentication for security.
-- **Data Analysis**: Advanced energy trend predictions using machine learning.
-- **Deployment**: Deploy to Google Cloud Run or AWS Lambda for scalability.
+- **Geospatial Analysis**: Introduce geographic data visualizations for renewable energy trends.
+- **Confidence Intervals**: Improve forecast accuracy with detailed statistical models.
+- **Enhanced Data Sources**: Continuously update with the latest global energy data.
 
 ---
 
