@@ -79,6 +79,27 @@ curl -X GET "http://127.0.0.1:8000/energy/export/forecast?country=USA&years=5&fo
 
 ---
 
+## **Test Coverage**
+
+This project has comprehensive unit tests to ensure reliability and accuracy. Current test coverage:
+
+```plaintext
+---------- coverage: platform win32, python 3.12.4-final-0 -----------
+Name                            Stmts   Miss  Cover
+---------------------------------------------------
+app\routers\energy.py             123      8    93%
+app\routers\predictions.py         45     14    69%
+app\utils\chart_utils.py           52     28    46%
+app\utils\data_client.py           14     14     0%
+app\utils\export_utils.py          16     16     0%
+app\utils\report_utils.py          29     21    28%
+---------------------------------------------------
+TOTAL                             312    104    67%
+```
+**Note**: Ongoing efforts are being made to improve coverage, especially for utility functions like `export_utils.py` and `chart_utils.py`.
+
+---
+
 ### **Renewable Energy Data**
 | Method | Endpoint                                      | Description                                      |
 |--------|----------------------------------------------|--------------------------------------------------|
