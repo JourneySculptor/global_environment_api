@@ -1,5 +1,32 @@
+import os
 import matplotlib.pyplot as plt
 from io import BytesIO
+import logging
+
+# Set up logger
+logger = logging.getLogger(__name__)
+
+# Directory for saving graphs
+GRAPH_FOLDER = "static/graphs"
+if not os.path.exists(GRAPH_FOLDER):
+    os.makedirs(GRAPH_FOLDER)
+
+def save_chart_and_return_path(buf, filename: str):
+    """
+    Save the chart buffer to a file and return the file path.
+
+    Args:
+        buf (BytesIO): Chart data in memory buffer.
+        filename (str): File name to save.
+
+    Returns:
+        str: File path where the chart is saved.
+    """
+    file_path = os.path.join(GRAPH_FOLDER, filename).replace("\\", "/")  # Ensure proper path format
+    with open(file_path, "wb") as f:
+        f.write(buf.getvalue())
+    logger.info(f"Chart saved at: {file_path}")
+    return file_path
 
 def generate_bar_chart(x_values, y_values, title: str, x_label: str, y_label: str):
     """Generate a bar chart."""

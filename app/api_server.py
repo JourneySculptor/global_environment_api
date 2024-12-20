@@ -1,5 +1,6 @@
 from fastapi import FastAPI
-from app.routers import energy
+from app.routers import energy, predictions
+from fastapi.staticfiles import StaticFiles
 from dotenv import load_dotenv
 import sys
 import os
@@ -16,6 +17,12 @@ app = FastAPI()
 
 # Register energy router
 app.include_router(energy.router, tags=["energy"]) 
+
+# Register predictions router
+app.include_router(predictions.router, tags=["predictions"])
+
+# Serve static files
+app.mount("/static", StaticFiles(directory="static"), name="static")
 
 @app.get("/")
 def read_root():

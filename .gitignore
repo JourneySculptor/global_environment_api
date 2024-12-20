@@ -1,4 +1,4 @@
-# Compiled Python files
+# Byte-compiled Python files
 *.py[cod]
 __pycache__/
 
@@ -11,7 +11,7 @@ ENV/
 .env
 keyfile.json
 
-# Data directories
+# Data directories (if you have temporary or intermediate data)
 data/
 
 # IDE settings
@@ -31,8 +31,56 @@ htmlcov/
 .cache
 coverage.xml
 
+# Ignore all PNG, CSV, and Excel files globally
 *.png
 *.csv
 *.xlsx
-static/graphs/
-static/exports/
+
+# Allow tracking PNG files in static/graphs/
+!static/graphs/*.png
+
+# Ignore everything else in static/graphs except specific files
+static/graphs/excluded_file.png
+# Byte-compiled Python files
+*.py[cod]
+__pycache__/
+
+# Virtual environment directories
+.venv
+venv/
+ENV/
+
+# Environment configuration
+.env
+keyfile.json
+
+# Data directories (if you have temporary or intermediate data)
+data/
+
+# IDE settings
+.vscode/
+.idea/
+
+# Log files
+*.log
+
+# Docker-related files
+*.dockerignore
+
+# Unit test / coverage reports
+htmlcov/
+.pytest_cache/
+.coverage
+.cache
+coverage.xml
+
+# Ignore all PNG, CSV, and Excel files globally
+*.png
+*.csv
+*.xlsx
+
+# Allow tracking PNG files in static/graphs/
+!static/graphs/*.png
+
+# Ignore everything else in static/graphs except specific files
+static/graphs/excluded_file.png
