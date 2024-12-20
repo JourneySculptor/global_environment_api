@@ -29,6 +29,10 @@ async def forecast_renewable_energy(
     Returns:
         JSON: Forecast data and graph URL.
     """
+    # Validate the years parameter
+    if years > 50:
+        raise HTTPException(status_code=400, detail="Years parameter exceeds allowed range.")
+
     # Query to fetch historical renewable energy consumption data
     query = f"""
         SELECT Year AS year, Renewable_Energy_Consumption AS consumption
@@ -36,6 +40,7 @@ async def forecast_renewable_energy(
         WHERE `Country Code` = '{country}'
         ORDER BY Year ASC
     """
+
 
     # Fetch data from BigQuery
     try:
