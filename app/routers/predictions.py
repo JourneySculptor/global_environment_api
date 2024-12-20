@@ -1,9 +1,11 @@
 from google.cloud import bigquery
 from app.utils.prediction_utils import calculate_forecast
 from app.utils.chart_utils import generate_forecast_line_chart
-import pandas as pd
+from app.utils.report_utils import export_to_csv, export_to_excel, export_to_pdf
 from fastapi.responses import FileResponse
 from fastapi import APIRouter, HTTPException, Query
+import pandas as pd
+import os
 
 
 # Initialize BigQuery client
@@ -78,3 +80,49 @@ async def forecast_renewable_energy(
                  for y, p in zip(future_years, predictions)],
         "graph_url": f"/{file_path}"
     }
+
+
+@router.get("/energy/export/forecast")
+async def export_forecast_data(
+    country: str = Query(..., description="Country code to filter data"),
+    years: int = Query(5, description="Number of years to forecast"),
+    format: str = Query("csv", description="File format: 'csv', 'excel', or 'pdf'")
+):
+    """
+    Export forecasted renewable energy data as CSV, Excel, or PDF.
+
+    Args:
+        country (str): Country code to filter data.
+        years (int): Number of years to forecast.
+        format (str): Desired file format ('csv', 'excel', or 'pdf').
+
+    Returns:
+        FileResponse: The exported file.
+    """
+    # Simulated forecast data (Replace with actual calculation logic)
+    forecast_data = [
+        {"year": 2023, "predicted_consumption": 10.54},
+        {"year": 2024, "predicted_consumption": 10.77},
+        {"year": 2025, "predicted_consumption": 11.0},
+        {"year": 2026, "predicted_consumption": 11.23},
+        {"year": 2027, "predicted_consumption": 11.46},
+    ]
+
+    if format.lower() == "csv":
+        file_path = export_to_csv(forecast_data, f"{country}_forecast.csv")
+        media_type = "text/csv"
+    elif format.lower() == "excel":
+        file_path = export_to_excel(forecast_data, f"{country}_forecast.xlsx")
+        media_type = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    elif format.lower() == "pdf":
+        file_path = export_to_pdf(forecast_data, f"{country}_forecast.pdf", f"Forecast for {country}")
+        media_type = "application/pdf"
+    else:
+        raise HTTPException(status_code=400, detail="Invalid format. Use 'csv', 'excel', or 'pdf'.")
+
+    return FileResponse(
+        file_path,
+        media_type=media_type,
+        filename=os.path.basename(file_path)
+    )
+

@@ -36,51 +36,12 @@ coverage.xml
 *.csv
 *.xlsx
 
-# Allow tracking PNG files in static/graphs/
-!static/graphs/*.png
+# Allow tracking specific PNG files in static/graphs/
+!static/graphs/JPN_bar_chart.png
+!static/graphs/JPN_line_chart.png
+!static/graphs/USA_forecast_chart.png
 
-# Ignore everything else in static/graphs except specific files
-static/graphs/excluded_file.png
-# Byte-compiled Python files
-*.py[cod]
-__pycache__/
-
-# Virtual environment directories
-.venv
-venv/
-ENV/
-
-# Environment configuration
-.env
-keyfile.json
-
-# Data directories (if you have temporary or intermediate data)
-data/
-
-# IDE settings
-.vscode/
-.idea/
-
-# Log files
-*.log
-
-# Docker-related files
-*.dockerignore
-
-# Unit test / coverage reports
-htmlcov/
-.pytest_cache/
-.coverage
-.cache
-coverage.xml
-
-# Ignore all PNG, CSV, and Excel files globally
-*.png
-*.csv
-*.xlsx
-
-# Allow tracking PNG files in static/graphs/
-!static/graphs/*.png
-
-# Ignore everything else in static/graphs except specific files
-static/graphs/excluded_file.png
+# Allow tracking specific PNG files in static/exports/
+!static/exports/USA_forecast_example.png
+!static/exports/USA_forecast_excel_example.png
+!static/exports/USA_forecast_pdf_example.png
