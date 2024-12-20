@@ -200,12 +200,14 @@ global_environment_api/
 │   ├── utils/
 │       ├── chart_utils.py    # Functions for graph generation
 │       ├── prediction_utils.py # Functions for forecast calculations
+│       ├── export_utils.py   # Functions for exporting forecast data
 │       └── data_client.py    # BigQuery client helper
 ├── static/                   
 │   ├── graphs/               # Saved graph images
 │   └── exports/              # Exported forecast data (e.g., CSV/Excel)
 ├── tests/                    
-│   └── test_energy.py        # Unit tests
+│   ├── test_energy.py        # Unit tests for energy endpoints
+│   ├── test_predictions.py   # Unit tests for prediction endpoints
 ├── requirements.txt          # Dependencies
 ├── Dockerfile                # Docker setup
 ├── .env                      # Environment variables
