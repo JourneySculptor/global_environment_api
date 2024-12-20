@@ -147,15 +147,20 @@ global_environment_api/
 ├── app/
 │   ├── api_server.py         # FastAPI application
 │   ├── routers/
-│   │   └── energy.py         # API endpoints
+│   │   ├── energy.py         # API endpoints for energy data
+│   │   └── predictions.py    # API endpoints for forecasts
 │   ├── utils/
+│       ├── chart_utils.py    # Functions for graph generation
+│       ├── prediction_utils.py # Functions for forecast calculations
 │       └── data_client.py    # BigQuery client helper
 ├── static/                   
-│   └── graphs/               # Saved graph images
+│   ├── graphs/               # Saved graph images
+│   └── exports/              # Exported forecast data (e.g., CSV/Excel)
 ├── tests/                    
 │   └── test_energy.py        # Unit tests
 ├── requirements.txt          # Dependencies
 ├── Dockerfile                # Docker setup
+├── .env                      # Environment variables
 └── README.md                 # Project documentation
 ```
 
