@@ -97,13 +97,13 @@ This project has comprehensive unit tests to ensure reliability and accuracy. Cu
 Name                            Stmts   Miss  Cover
 ---------------------------------------------------
 app\routers\energy.py             123      8    93%
-app\routers\predictions.py         45     14    69%
+app\routers\predictions.py         45      3    93%
 app\utils\chart_utils.py           52     28    46%
-app\utils\data_client.py           14     14     0%
-app\utils\export_utils.py          16     16     0%
-app\utils\report_utils.py          29     21    28%
+app\utils\data_client.py           18      3    83%
+app\utils\export_utils.py          47     18    62%
+app\utils\report_utils.py          29      1    97%
 ---------------------------------------------------
-TOTAL                             312    104    67%
+TOTAL                             347     64    82%
 ```
 **Note**: Ongoing efforts are being made to improve coverage, especially for utility functions like `export_utils.py` and `chart_utils.py`.
 
@@ -224,6 +224,8 @@ global_environment_api/
 ├── tests/
 │   ├── test_energy.py        # Unit tests for energy endpoints
 │   ├── test_predictions.py   # Unit tests for prediction endpoints
+│   ├── test_export_utils.py  # Unit tests for export utilities
+│   ├── test_data_client.py   # Unit tests for BigQuery client helper
 ├── search_keywords.py        # Script for searching keywords in the project
 ├── requirements.txt          # Dependencies
 ├── Dockerfile                # Docker setup
