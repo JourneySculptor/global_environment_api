@@ -31,10 +31,11 @@ htmlcov/
 .cache
 coverage.xml
 
-# Ignore all PNG, CSV, and Excel files globally
+# Ignore all PNG, CSV, PDF and Excel files globally
 *.png
 *.csv
 *.xlsx
+*.pdf
 
 # Allow tracking specific PNG files in static/graphs/
 !static/graphs/JPN_bar_chart.png
