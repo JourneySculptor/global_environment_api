@@ -1,3 +1,5 @@
+# app/utils/data_client.py
+
 import os
 from google.cloud import bigquery
 from dotenv import load_dotenv
@@ -11,6 +13,9 @@ os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = os.getenv("GOOGLE_APPLICATION_CRE
 def fetch_climate_data():
     """
     Fetch climate data from BigQuery public dataset.
+    
+    Returns:
+        List[Dict]: Climate data as a list of dictionaries.
     """
     client = bigquery.Client()
 
@@ -33,3 +38,17 @@ def fetch_climate_data():
             "country": row.country
         })
     return data
+
+def fetch_data_from_bigquery(query: str):
+    """
+    Fetch data from BigQuery using a SQL query.
+    
+    Args:
+        query (str): The SQL query to execute.
+    
+    Returns:
+        List[Dict]: Query results as a list of dictionaries.
+    """
+    client = bigquery.Client()
+    query_job = client.query(query)
+    return [dict(row) for row in query_job.result()]
