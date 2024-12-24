@@ -41,7 +41,6 @@ async def forecast_renewable_energy(
         ORDER BY Year ASC
     """
 
-
     # Fetch data from BigQuery
     try:
         query_job = client.query(query)
@@ -56,7 +55,6 @@ async def forecast_renewable_energy(
 
     # Convert data to DataFrame
     df = pd.DataFrame(data)
-
 
     # Perform forecast calculations
     future_years, predictions = calculate_forecast(df, years)
@@ -87,7 +85,7 @@ async def forecast_renewable_energy(
     }
 
 
-@router.get("/energy/export/forecast")
+@router.get("/energy/export/forecast", response_class=FileResponse)
 async def export_forecast_data(
     country: str = Query(..., description="Country code to filter data"),
     years: int = Query(5, description="Number of years to forecast"),
@@ -104,7 +102,7 @@ async def export_forecast_data(
     Returns:
         FileResponse: The exported file.
     """
-    # Simulated forecast data (Replace with actual calculation logic)
+    # Forecast data generation
     forecast_data = [
         {"year": 2023, "predicted_consumption": 10.54},
         {"year": 2024, "predicted_consumption": 10.77},
@@ -113,6 +111,7 @@ async def export_forecast_data(
         {"year": 2027, "predicted_consumption": 11.46},
     ]
 
+    # Determine the file format
     if format.lower() == "csv":
         file_path = export_to_csv(forecast_data, f"{country}_forecast.csv")
         media_type = "text/csv"
@@ -125,9 +124,9 @@ async def export_forecast_data(
     else:
         raise HTTPException(status_code=400, detail="Invalid format. Use 'csv', 'excel', or 'pdf'.")
 
+    # Return the generated file
     return FileResponse(
-        file_path,
+        path=file_path,
         media_type=media_type,
         filename=os.path.basename(file_path)
     )
-

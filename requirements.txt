@@ -3,3 +3,9 @@ uvicorn
 google-cloud-bigquery
 pandas
 matplotlib
+openpyxl
+fpdf
+scikit-learn
+python-dotenv
+pytest
+httpx
