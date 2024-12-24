@@ -3,8 +3,8 @@
 This project provides a robust and scalable RESTful API for analyzing **climate data** and **renewable energy consumption trends**. Designed for environmental researchers, data analysts, and decision-makers, it enables querying, filtering, and visualization of global data with ease.
 
 ## **Key Highlights**  
-  - **Export** renewable energy forecast data in CSV, Excel, or PDF for direct use in reports.  
-  - **Mermaid Diagram** (below) to illustrate the flow of API endpoints.  
+  - **Export**: renewable energy forecast data in CSV, Excel, or PDF for direct use in reports.  
+  - **Mermaid Diagram**: (below) to illustrate the flow of API endpoints.  
   - **High Performance**: Powered by BigQuery (for large datasets) and FastAPI (for fast concurrency).
 
 ---
