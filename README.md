@@ -95,6 +95,7 @@ Export forecasted renewable energy data.
 | Method | Endpoint                   | Description                                      |
 |--------|----------------------------|--------------------------------------------------|
 | GET    | `/energy/export/forecast`  | Export forecast in **CSV**, **Excel**, or **PDF**. |
+
 **Example Queries**:
 ```bash
 # Export as CSV
